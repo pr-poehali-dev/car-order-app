@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { carBrands, carModels, configurations } from '@/data/carData';
 import type { CarBrand, CarModel, Configuration } from '@/data/carData';
 
-type Step = 'brand' | 'model' | 'configuration';
+type Step = 'brand' | 'model' | 'configuration' | 'contacts';
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<Step>('brand');
@@ -14,6 +14,11 @@ const Index = () => {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedConfiguration, setSelectedConfiguration] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [contactData, setContactData] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
 
   const filteredBrands = carBrands.filter(brand =>
     brand.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -36,8 +41,24 @@ const Index = () => {
     setSelectedConfiguration(configId);
   };
 
+  const handleContactChange = (field: string, value: string) => {
+    setContactData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitOrder = () => {
+    console.log('Order submitted:', {
+      brand: selectedBrandData?.name,
+      model: selectedModelData?.name,
+      configuration: selectedConfigData?.name,
+      contact: contactData
+    });
+    alert('Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.');
+  };
+
   const goBack = () => {
-    if (currentStep === 'configuration') {
+    if (currentStep === 'contacts') {
+      setCurrentStep('configuration');
+    } else if (currentStep === 'configuration') {
       setCurrentStep('model');
       setSelectedConfiguration(null);
     } else if (currentStep === 'model') {
@@ -75,16 +96,17 @@ const Index = () => {
           }`}>
             1
           </div>
-          <div className={`h-[2px] w-16 ${currentStep !== 'brand' ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`h-[2px] w-16 ${['model', 'configuration', 'contacts'].includes(currentStep) ? 'bg-primary' : 'bg-muted'}`} />
           <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
             currentStep === 'model' ? 'bg-primary text-primary-foreground' : 
-            currentStep === 'configuration' ? 'bg-muted text-muted-foreground' : 'bg-muted text-muted-foreground'
+            ['configuration', 'contacts'].includes(currentStep) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
           }`}>
             2
           </div>
-          <div className={`h-[2px] w-16 ${currentStep === 'configuration' ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`h-[2px] w-16 ${['configuration', 'contacts'].includes(currentStep) ? 'bg-primary' : 'bg-muted'}`} />
           <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
-            currentStep === 'configuration' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            currentStep === 'configuration' ? 'bg-primary text-primary-foreground' : 
+            currentStep === 'contacts' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
           }`}>
             3
           </div>
@@ -208,10 +230,71 @@ const Index = () => {
               </div>
               
               {selectedConfiguration && (
-                <Button className="w-full mt-6" size="lg">
-                  Оформить заказ
+                <Button 
+                  className="w-full mt-6" 
+                  size="lg"
+                  onClick={() => setCurrentStep('contacts')}
+                >
+                  Перейти к оформлению
                 </Button>
               )}
+            </div>
+          )}
+
+          {currentStep === 'contacts' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Контактные данные</h2>
+              <p className="text-muted-foreground mb-6">Оставьте ваши данные для связи</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Имя</label>
+                  <Input
+                    placeholder="Введите ваше имя"
+                    value={contactData.name}
+                    onChange={(e) => handleContactChange('name', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Телефон</label>
+                  <Input
+                    placeholder="+7 (999) 123-45-67"
+                    type="tel"
+                    value={contactData.phone}
+                    onChange={(e) => handleContactChange('phone', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Email</label>
+                  <Input
+                    placeholder="example@mail.ru"
+                    type="email"
+                    value={contactData.email}
+                    onChange={(e) => handleContactChange('email', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <h3 className="font-medium mb-2">Итоговый заказ:</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="text-muted-foreground">Автомобиль:</span> {selectedBrandData?.name} {selectedModelData?.name}</p>
+                  <p><span className="text-muted-foreground">Комплектация:</span> {selectedConfigData?.name}</p>
+                  <p className="font-semibold text-lg mt-2">{selectedConfigData?.price}</p>
+                </div>
+              </div>
+              
+              <Button 
+                className="w-full mt-6" 
+                size="lg"
+                onClick={handleSubmitOrder}
+                disabled={!contactData.name || !contactData.phone}
+              >
+                <Icon name="Send" size={20} className="mr-2" />
+                Отправить заказ
+              </Button>
             </div>
           )}
         </div>
